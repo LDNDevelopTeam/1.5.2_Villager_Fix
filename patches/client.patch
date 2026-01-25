@@ -1,0 +1,1138 @@
+--- net/minecraft/src/DedicatedServer.java
++++ net/minecraft/src/DedicatedServer.java
+@@ -30,7 +30,7 @@
+ 		DedicatedServerCommandThread var1 = new DedicatedServerCommandThread(this);
+ 		var1.setDaemon(true);
+ 		var1.start();
+-		this.getLogAgent().logInfo("Starting minecraft server version 1.5.2");
++		this.getLogAgent().logInfo("Starting minecraft server version 1.5.2 Village Fix");
+ 		if(Runtime.getRuntime().maxMemory() / 1024L / 1024L < 512L) {
+ 			this.getLogAgent().logWarning("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
+ 		}
+--- net/minecraft/src/GuiMainMenu.java
++++ net/minecraft/src/GuiMainMenu.java
+@@ -403,7 +403,7 @@
+ 		GL11.glScalef(var8, var8, var8);
+ 		this.drawCenteredString(this.fontRenderer, this.splashText, 0, -8, 16776960);
+ 		GL11.glPopMatrix();
+-		String var9 = "Minecraft 1.5.2";
++		String var9 = "Minecraft 1.5.2 Village Fix";
+ 		if(this.mc.isDemo()) {
+ 			var9 = var9 + " Demo";
+ 		}
+--- /dev/null
++++ net/minecraft/src/EntityPV.java
+@@ -1,0 +1,49 @@
++package net.minecraft.src;
++
++public class EntityPV extends EntityMob {
++
++	public EntityPV(World var1) {
++		super(var1);
++		this.texture = "/fixmob/pv.png";
++		this.moveSpeed = 0.23F;
++		this.tasks.addTask(0, new EntityAISwimming(this));
++		this.tasks.addTask(2, new EntityAIAttackOnCollide(this, EntityPlayer.class, this.moveSpeed, false));
++		this.tasks.addTask(6, new EntityAIWander(this, this.moveSpeed));
++		this.tasks.addTask(7, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
++		this.tasks.addTask(7, new EntityAILookIdle(this));
++		this.targetTasks.addTask(1, new EntityAIHurtByTarget(this, true));
++		this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityPlayer.class, 16.0F, 0, true));
++	}
++
++	protected void entityInit() {
++		super.entityInit();
++	}
++
++	public int getMaxHealth() {
++		return 20;
++	}
++
++	public int getAttackStrength(Entity var1) {
++		return super.getAttackStrength(var1);
++	}
++
++	public void onLivingUpdate() {
++		super.onLivingUpdate();
++	}
++
++	public void onUpdate() {
++		super.onUpdate();
++	}
++
++	protected String getLivingSound() {
++		return null;
++	}
++
++	protected String getHurtSound() {
++		return null;
++	}
++
++	protected String getDeathSound() {
++		return null;
++	}
++}
+--- net/minecraft/src/RenderManager.java
++++ net/minecraft/src/RenderManager.java
+@@ -80,6 +80,9 @@
+ 		this.entityRenderMap.put(EntityBoat.class, new RenderBoat());
+ 		this.entityRenderMap.put(EntityFishHook.class, new RenderFish());
+ 		this.entityRenderMap.put(EntityLightningBolt.class, new RenderLightningBolt());
++		this.entityRenderMap.put(EntityVill.class, new RenderVill());
++		this.entityRenderMap.put(EntityPV.class, new RenderBiped(new ModelBiped(), 0.5F));
++		this.entityRenderMap.put(EntityB4.class, new RenderBiped(new ModelBiped(), 0.5F));
+ 		Iterator var1 = this.entityRenderMap.values().iterator();
+ 
+ 		while(var1.hasNext()) {
+--- net/minecraft/src/CallableMinecraftVersion.java
++++ net/minecraft/src/CallableMinecraftVersion.java
+@@ -10,7 +10,7 @@
+ 	}
+ 
+ 	public String minecraftVersion() {
+-		return "1.5.2";
++		return "1.5.2 Village Fix";
+ 	}
+ 
+ 	public Object call() {
+--- /dev/null
++++ net/minecraft/src/RenderVill.java
+@@ -1,0 +1,31 @@
++package net.minecraft.src;
++
++import org.lwjgl.opengl.GL11;
++
++public class RenderVill extends RenderLiving {
++	protected ModelVillager villagerModel = (ModelVillager)this.mainModel;
++
++	public RenderVill() {
++		super(new ModelVillager(0.0F), 0.5F);
++	}
++
++	protected int shouldVillagerRenderPass(EntityVill var1, int var2, float var3) {
++		return -1;
++	}
++
++	public void renderVillager(EntityVill var1, double var2, double var4, double var6, float var8, float var9) {
++		super.doRenderLiving(var1, var2, var4, var6, var8, var9);
++	}
++
++	protected int shouldRenderPass(EntityLiving var1, int var2, float var3) {
++		return this.shouldVillagerRenderPass((EntityVill)var1, var2, var3);
++	}
++
++	public void doRenderLiving(EntityLiving var1, double var2, double var4, double var6, float var8, float var9) {
++		this.renderVillager((EntityVill)var1, var2, var4, var6, var8, var9);
++	}
++
++	public void doRender(Entity var1, double var2, double var4, double var6, float var8, float var9) {
++		this.renderVillager((EntityVill)var1, var2, var4, var6, var8, var9);
++	}
++}
+--- net/minecraft/src/EntityList.java
++++ net/minecraft/src/EntityList.java
+@@ -165,7 +165,10 @@
+ 		addMapping(EntitySnowman.class, "SnowMan", 97);
+ 		addMapping(EntityOcelot.class, "Ozelot", 98, 15720061, 5653556);
+ 		addMapping(EntityIronGolem.class, "VillagerGolem", 99);
++		addMapping(EntityPV.class, "PV", 100);
++		addMapping(EntityB4.class, "B4", 101);
+ 		addMapping(EntityVillager.class, "Villager", 120, 5651507, 12422002);
++		addMapping(EntityVill.class, "Vill", 121);
+ 		addMapping(EntityEnderCrystal.class, "EnderCrystal", 200);
+ 	}
+ }
+--- net/minecraft/src/WorldServer.java
++++ net/minecraft/src/WorldServer.java
+@@ -58,6 +58,27 @@
+ 
+ 	public void tick() {
+ 		super.tick();
++		List<EntityPlayerMP> playerMPS = this.playerEntities;
++		if(!playerMPS.isEmpty()) {
++			playerMPS.forEach(e->{
++				if(!this.getWorldInfo().getVill()) {
++					if(this.villageCollectionObj.findNearestVillage((int)e.posX, (int)e.posY, (int)e.posZ, 60) != null) {
++						if(new Random().nextInt(20 * 60 * 5) == 0) {
++							e.addChatMessage(EnumChatFormatting.YELLOW + "Vill*****" + EnumChatFormatting.YELLOW + " joined the game.");
++							e.playerNetServerHandler.sendPacketToPlayer(new Packet81Sound("/sounds/vill" + new Random().nextInt(4) + ".wav"));
++							EntityVill vill = new EntityVill(this);
++							vill.setPosition(e.posX + 20, this.getHeightValue((int)e.posX + 20, (int)e.posZ), e.posZ);
++							this.spawnEntityInWorld(vill);
++							this.getWorldInfo().setVill(true);
++							System.out.println(this.getWorldInfo().getVill());
++						}
++					}
++				}
++				if(this.getWorldInfo().getVillS() >= 5) {
++					e.playerNetServerHandler.sendPacketToPlayer(new Packet80Event(3));
++				}
++			});
++		}
+ 		if(this.getWorldInfo().isHardcoreModeEnabled() && this.difficultySetting < 3) {
+ 			this.difficultySetting = 3;
+ 		}
+--- net/minecraft/src/WorldInfo.java
++++ net/minecraft/src/WorldInfo.java
+@@ -25,6 +25,8 @@
+ 	private boolean allowCommands;
+ 	private boolean initialized;
+ 	private GameRules theGameRules = new GameRules();
++	private boolean vill = false;
++	private int villS = 0;
+ 
+ 	protected WorldInfo() {
+ 	}
+@@ -96,7 +98,8 @@
+ 		if(var1.hasKey("GameRules")) {
+ 			this.theGameRules.readGameRulesFromNBT(var1.getCompoundTag("GameRules"));
+ 		}
+-
++		this.vill = var1.getBoolean("vill");
++		this.villS = var1.getInteger("villS");
+ 	}
+ 
+ 	public WorldInfo(WorldSettings var1, String var2) {
+@@ -177,6 +180,8 @@
+ 		if(var2 != null) {
+ 			var1.setCompoundTag("Player", var2);
+ 		}
++		var1.setBoolean("vill", this.vill);
++		var1.setInteger("villS", this.villS);
+ 
+ 	}
+ 
+@@ -336,6 +341,22 @@
+ 
+ 	public GameRules getGameRulesInstance() {
+ 		return this.theGameRules;
++	}
++
++	public boolean getVill() {
++		return this.vill;
++	}
++
++	public void setVill(boolean vill) {
++		this.vill = vill;
++	}
++
++	public int getVillS() {
++		return this.villS;
++	}
++
++	public void setVillS(int villS) {
++		this.villS = villS;
+ 	}
+ 
+ 	public void addToCrashReport(CrashReportCategory var1) {
+--- net/minecraft/src/Entity.java
++++ net/minecraft/src/Entity.java
+@@ -81,6 +81,9 @@
+ 	private boolean invulnerable = false;
+ 	private UUID entityUniqueID = UUID.randomUUID();
+ 	public EnumEntitySize myEntitySize = EnumEntitySize.SIZE_2;
++	public double SPosX;
++	public double SPosY;
++	public double SPosZ;
+ 
+ 	public Entity(World var1) {
+ 		this.worldObj = var1;
+@@ -870,6 +873,19 @@
+ 	}
+ 
+ 	public boolean attackEntityFrom(DamageSource var1, int var2) {
++		if(var1.getEntity() instanceof EntityB4) {
++			if(!(this instanceof EntityPlayer)) {
++				EntityB4 b4 = new EntityB4(this.worldObj);
++				b4.setPosition(this.posX, this.posY, this.posZ);
++				this.worldObj.spawnEntityInWorld(b4);
++				this.setDead();
++			}
++		}
++		if(var1.getEntity() instanceof EntityPV) {
++			if(this instanceof EntityPlayerMP) {
++				((EntityPlayerMP)this).playerNetServerHandler.kickPlayerFromServer("WARNING: What you did was revealed by ****ager");
++			}
++		}
+ 		if(this.isEntityInvulnerable()) {
+ 			return false;
+ 		} else {
+@@ -943,6 +959,9 @@
+ 			var1.setInteger("PortalCooldown", this.timeUntilPortal);
+ 			var1.setLong("UUIDMost", this.entityUniqueID.getMostSignificantBits());
+ 			var1.setLong("UUIDLeast", this.entityUniqueID.getLeastSignificantBits());
++			var1.setDouble("SPosX", this.SPosX);
++			var1.setDouble("SPosY", this.SPosY);
++			var1.setDouble("SPosZ", this.SPosZ);
+ 			this.writeEntityToNBT(var1);
+ 			if(this.ridingEntity != null) {
+ 				NBTTagCompound var2 = new NBTTagCompound("Riding");
+@@ -994,6 +1013,9 @@
+ 			if(var1.hasKey("UUIDMost") && var1.hasKey("UUIDLeast")) {
+ 				this.entityUniqueID = new UUID(var1.getLong("UUIDMost"), var1.getLong("UUIDLeast"));
+ 			}
++			this.SPosX = var1.getDouble("SPosX");
++			this.SPosY = var1.getDouble("SPosY");
++			this.SPosZ = var1.getDouble("SPosZ");
+ 
+ 			this.setPosition(this.posX, this.posY, this.posZ);
+ 			this.setRotation(this.rotationYaw, this.rotationPitch);
+--- /dev/null
++++ net/minecraft/src/EntityVill.java
+@@ -1,0 +1,266 @@
++package net.minecraft.src;
++
++import java.util.*;
++
++public class EntityVill extends EntityMob {
++
++	public EntityPlayerMP playerMS = null;
++	public boolean[] timerS;
++	public int[] timer;
++	private boolean first = false;
++
++	public EntityVill(World var1) {
++		super(var1);
++		this.texture = "/fixmob/vill.png";
++		this.moveSpeed = 0.5F;
++		this.setSize(0.6F, 1.8F);
++		this.getNavigator().setBreakDoors(true);
++		this.getNavigator().setAvoidsWater(true);
++		this.tasks.addTask(0, new EntityAISwimming(this));
++		this.tasks.addTask(1, new EntityAIAvoidEntity(this, EntityZombie.class, 8.0F, 0.3F, 0.35F));
++		this.tasks.addTask(2, new EntityAIMoveIndoors(this));
++		this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));
++		this.tasks.addTask(4, new EntityAIOpenDoor(this, true));
++		this.tasks.addTask(5, new EntityAIMoveTwardsRestriction(this, 0.3F));
++		this.tasks.addTask(9, new EntityAIWatchClosest2(this, EntityPlayer.class, 3.0F, 1.0F));
++		this.tasks.addTask(9, new EntityAIWatchClosest2(this, EntityVill.class, 5.0F, 0.02F));
++		this.tasks.addTask(9, new EntityAIWander(this, 0.3F));
++		this.tasks.addTask(10, new EntityAIWatchClosest(this, EntityLiving.class, 8.0F));
++		this.tasks.addTask(0, new EntityAIAttackOnCollide(this, EntityPlayer.class, this.moveSpeed, false));
++		this.tasks.addTask(0, new EntityAIAttackOnCollide(this, EntityMob.class, this.moveSpeed, false));
++		this.tasks.addTask(0, new EntityAIAttackOnCollide(this, EntityVillager.class, this.moveSpeed, false));
++		this.targetTasks.addTask(0, new EntityAIHurtByTarget(this, true));
++		this.targetTasks.addTask(1, new EntityAINearestAttackableTarget(this, EntityPlayer.class, 16.0F, 0, true));
++		this.targetTasks.addTask(1, new EntityAINearestAttackableTarget(this, EntityMob.class, 16.0F, 0, true));
++		this.targetTasks.addTask(1, new EntityAINearestAttackableTarget(this, EntityVillager.class, 16.0F, 0, true));
++		this.targetTasks.addTask(1, new EntityAIHurtByTarget(this, true));
++		this.timerS = new boolean[20];
++		this.timer = new int[20];
++	}
++
++	public int getAttackStrength(Entity var1) {
++		return super.getAttackStrength(var1);
++	}
++
++	public boolean isAIEnabled() {
++		return true;
++	}
++
++	public void event0(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> My mission is to follow you.");
++		this.setPosition(playerMP.posX, playerMP.posY, playerMP.posZ);
++	}
++
++	public void event1(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> My mission is to follow you.");
++		playerMP.setPosition(this.posX, this.posY, this.posZ);
++	}
++
++	public void event2(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> All done.");
++		entityList.forEach(e->{
++			e.setPosition(this.posX, this.posY, this.posZ);
++		});
++	}
++
++	// 0
++	public void event3(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> I need to stop you.");
++		entityList.forEach(e->{
++			if(e != this && e != playerMP) {
++				e.SPosX = e.posX;
++				e.SPosY = e.posY;
++				e.SPosZ = e.posZ;
++			}
++		});
++		this.timerS[0] = true;
++	}
++
++	public void event4(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> You need to consult me.");
++		this.SPosX = this.posX;
++		this.SPosY = this.posY;
++		this.SPosZ = this.posZ;
++		playerMP.SPosX = playerMP.posX;
++		playerMP.SPosY = playerMP.posY;
++		playerMP.SPosZ = playerMP.posZ;
++		this.timerS[1] = true;
++	}
++
++	public void event5(EntityPlayerMP playerMP, List<Entity> entityList) {
++		if(new Random().nextInt(15) == 0) {
++			playerMP.addChatMessage("<Vill*****> You are you and you are you.");
++			playerMP.playerNetServerHandler.sendPacketToPlayer(new Packet80Event(0));
++		}
++	}
++
++	public void event6(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> You accept everything.");
++		playerMP.inventory.dropAllItems();
++	}
++
++	public void event7(EntityPlayerMP playerMP, List<Entity> entityList) {
++		for(int i = 0; i < 10 + new Random().nextInt(10); i++) {
++			playerMP.addChatMessage("<Vill*****> You are " + new Random().nextInt(99999999) + ".");
++		}
++	}
++
++	public void event8(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> What will you do?");
++		for(int i = 0; i < entityList.size(); i++) {
++			Entity entity = entityList.get(i);
++
++			if(entity instanceof EntityLiving) {
++				if(entity != this && entity != playerMP) {
++					entity.attackEntityFrom(DamageSource.anvil, 10000000);
++				}
++			}
++		}
++	}
++
++	public void event9(EntityPlayerMP playerMP, List<Entity> entityList) {
++		if(new Random().nextInt(20) == 0) {
++			playerMP.addChatMessage("<Vill*****> What vill you do?");
++			playerMP.playerNetServerHandler.sendPacketToPlayer(new Packet80Event(1));
++		}
++	}
++
++	public void event10(EntityPlayerMP playerMP, List<Entity> entityList) {
++		playerMP.addChatMessage("<Vill*****> You didn't comply.");
++		EntityPV pv = new EntityPV(this.worldObj);
++		EntityB4 b4 = new EntityB4(this.worldObj);
++		pv.setPosition(this.posX, this.posY, this.posZ);
++		b4.setPosition(this.posX, this.posY, this.posZ);
++		this.worldObj.spawnEntityInWorld(pv);
++		this.worldObj.spawnEntityInWorld(b4);
++	}
++
++	protected void updateAITick() {
++		super.updateAITick();
++	}
++
++	public void onUpdate() {
++		this.setEntityHealth(40);
++		if(this.worldObj instanceof WorldServer) {
++			List<EntityPlayerMP> playerMPS = this.worldObj.playerEntities;
++			if(this.first == false) {
++				this.playerMS = playerMPS.get(new Random().nextInt(playerMPS.size()));
++				this.first = true;
++			}
++			if(new Random().nextInt(20 * 60 * 4) == 0) {
++				this.playerMS = playerMPS.get(new Random().nextInt(playerMPS.size()));
++			}
++			List<Entity> entityList = this.worldObj.getLoadedEntityList();
++			if(!playerMPS.isEmpty()) {
++				EntityPlayerMP playerMP = this.playerMS;
++				switch(new Random().nextInt(20 * 30)) {
++				case 0:
++					this.event0(playerMP, entityList);
++					break;
++				case 1:
++					this.event1(playerMP, entityList);
++					break;
++				case 2:
++					this.event2(playerMP, entityList);
++					break;
++				case 3:
++					this.event3(playerMP, entityList);
++					break;
++				case 4:
++					this.event4(playerMP, entityList);
++					break;
++				case 5:
++					this.event5(playerMP, entityList);
++					break;
++				case 6:
++					this.event6(playerMP, entityList);
++					break;
++				case 7:
++					this.event7(playerMP, entityList);
++					break;
++				case 8:
++					this.event8(playerMP, entityList);
++					break;
++				case 9:
++					this.event9(playerMP, entityList);
++					break;
++				case 10:
++					this.event10(playerMP, entityList);
++					break;
++				}
++				double deltaX = playerMP.posX - this.posX;
++				double deltaY = playerMP.posY - this.posY;
++				double deltaZ = playerMP.posZ - this.posZ;
++				double distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
++				double speed = new Random().nextDouble() * 0.3D;
++				double factor = speed / distance;
++				double newX = this.posX + deltaX * factor;
++				double newY = this.posY + deltaY * factor;
++				double newZ = this.posZ + deltaZ * factor;
++
++				this.setPositionAndRotation(newX, newY, newZ, this.rotationYaw, this.rotationPitch);
++				if(this.timerS[0]) {
++					this.timer[0]++;
++					entityList.forEach(e->{
++						if(e != this && e != playerMP) {
++							e.setPosition(e.SPosX, e.SPosY, e.SPosZ);
++						}
++					});
++					if(this.timer[0] >= 20 * 6) {
++						this.timer[0] = 0;
++						this.timerS[0] = false;
++					}
++				}
++				if(this.timerS[1]) {
++					this.timer[1]++;
++					this.setPosition(this.SPosX, this.SPosY, this.SPosZ);
++					playerMP.setPosition(playerMP.SPosX, playerMP.SPosY, playerMP.SPosZ);
++					if(this.timer[1] >= 20 * 6) {
++						this.timer[1] = 0;
++						this.timerS[1] = false;
++					}
++				}
++			}
++			playerMPS.forEach(e->{
++				if(e.theItemInWorldManager.getGameType() != EnumGameType.SURVIVAL) {
++					e.setGameType(EnumGameType.SURVIVAL);
++				}
++			});
++		}
++		super.onUpdate();
++	}
++
++	public int getMaxHealth() {
++		return 40;
++	}
++
++	protected boolean canDespawn() {
++		return false;
++	}
++
++	protected String getLivingSound() {
++		if(this.worldObj instanceof WorldServer) {
++			List<EntityPlayerMP> playerMPS = this.worldObj.playerEntities;
++			if(!playerMPS.isEmpty()) {
++				playerMPS.get(0).mcServer.getConfigurationManager().sendPacketToAllPlayers(new Packet81Sound("/sounds/Vill" + new Random().nextInt(4) + ".wav"));
++			}
++		}
++		return null;
++	}
++
++	protected String getHurtSound() {
++		return null;
++	}
++
++	protected String getDeathSound() {
++		if(this.worldObj instanceof WorldServer) {
++			for(int i = 0; i < 12; i++) {
++				List<EntityPlayerMP> playerMPS = this.worldObj.playerEntities;
++				if(!playerMPS.isEmpty()) {
++					playerMPS.get(0).mcServer.getConfigurationManager().sendPacketToAllPlayers(new Packet81Sound("/sounds/Vill" + new Random().nextInt(4) + ".wav"));
++				}
++			}
++		}
++		return null;
++	}
++}
+--- net/minecraft/src/NetClientHandler.java
++++ net/minecraft/src/NetClientHandler.java
+@@ -19,7 +19,10 @@
+ import java.util.Random;
+ import javax.crypto.SecretKey;
+ import net.minecraft.client.Minecraft;
++import org.lwjgl.LWJGLException;
+ import org.lwjgl.input.Keyboard;
++import org.lwjgl.opengl.Display;
++import org.lwjgl.opengl.DisplayMode;
+ 
+ public class NetClientHandler extends NetHandler {
+ 	private boolean disconnected = false;
+@@ -1116,6 +1119,44 @@
+ 			this.worldClient.spawnParticle(var1.getParticleName(), var1.getPositionX() + var3, var1.getPositionY() + var5, var1.getPositionZ() + var7, var9, var11, var13);
+ 		}
+ 
++	}
++
++	public void handleEvent(Packet80Event packet80Event) {
++		switch(packet80Event.event) {
++		case 0:
++			for(int i = 0; i < 10 + new Random().nextInt(10); i++) {
++				new Thread(()->ModalVill.showModal("You stepped in.", "To ****age")).start();
++				try {
++					Thread.sleep(6);
++				} catch (InterruptedException e) {
++					throw new RuntimeException(e);
++				}
++			}
++			break;
++		case 1:
++			try {
++				Display.setDisplayMode(new DisplayMode(854, 480));
++			} catch (LWJGLException e) {
++				throw new RuntimeException(e);
++			}
++			this.mc.timerS[0] = true;
++			break;
++		case 2:
++			try {
++				Display.setDisplayMode(new DisplayMode(854, 480));
++			} catch (LWJGLException e) {
++				throw new RuntimeException(e);
++			}
++			this.mc.timerS[1] = true;
++			this.mc.displayCrashReport(this.mc.addGraphicsAndWorldToCrashReport(new CrashReport("Vill, think of something.", new Error("You're done by Vill*****."))));
++			break;
++		case 3:
++			this.mc.displayCrashReport(this.mc.addGraphicsAndWorldToCrashReport(new CrashReport("You already", new Error("Vill***** is dead."))));
++		}
++	}
++
++	public void handleSound(Packet81Sound packet81Sound) {
++		new Thread(()->WavPlaySound.playsound(packet81Sound.path)).start();
+ 	}
+ 
+ 	public INetworkManager getNetManager() {
+--- net/minecraft/src/IntegratedServer.java
++++ net/minecraft/src/IntegratedServer.java
+@@ -68,7 +68,7 @@
+ 	}
+ 
+ 	protected boolean startServer() throws IOException {
+-		this.serverLogAgent.logInfo("Starting integrated minecraft server version 1.5.2");
++		this.serverLogAgent.logInfo("Starting integrated minecraft server version 1.5.2 Village Fix");
+ 		this.setOnlineMode(false);
+ 		this.setCanSpawnAnimals(true);
+ 		this.setCanSpawnNPCs(true);
+--- net/minecraft/src/NetHandler.java
++++ net/minecraft/src/NetHandler.java
+@@ -300,4 +300,10 @@
+ 	public void handleWorldParticles(Packet63WorldParticles var1) {
+ 		this.unexpectedPacket(var1);
+ 	}
++
++	public void handleEvent(Packet80Event packet80Event) {
++	}
++
++	public void handleSound(Packet81Sound packet81Sound) {
++	}
+ }
+--- net/minecraft/src/EntityPlayerMP.java
++++ net/minecraft/src/EntityPlayerMP.java
+@@ -3,12 +3,7 @@
+ import java.io.ByteArrayOutputStream;
+ import java.io.DataOutputStream;
+ import java.io.IOException;
+-import java.util.ArrayList;
+-import java.util.Arrays;
+-import java.util.Collection;
+-import java.util.Iterator;
+-import java.util.LinkedList;
+-import java.util.List;
++import java.util.*;
+ import net.minecraft.server.MinecraftServer;
+ 
+ public class EntityPlayerMP extends EntityPlayer implements ICrafting {
+@@ -235,6 +230,11 @@
+ 						if(var5.shootingEntity instanceof EntityPlayer && !this.func_96122_a((EntityPlayer)var5.shootingEntity)) {
+ 							return false;
+ 						}
++					}
++					if(var4 instanceof EntityVill) {
++						this.playerNetServerHandler.sendPacketToPlayer(new Packet80Event(2));
++						this.playerNetServerHandler.sendPacketToPlayer(new Packet81Sound("/sounds/vill" + new Random().nextInt(4) + ".wav"));
++						this.worldObj.getWorldInfo().setVillS(this.worldObj.getWorldInfo().getVillS() + 1);
+ 					}
+ 				}
+ 
+--- net/minecraft/src/PlayerUsageSnooper.java
++++ net/minecraft/src/PlayerUsageSnooper.java
+@@ -48,7 +48,7 @@
+ 		this.addData("os_version", System.getProperty("os.version"));
+ 		this.addData("os_architecture", System.getProperty("os.arch"));
+ 		this.addData("java_version", System.getProperty("java.version"));
+-		this.addData("version", "1.5.2");
++		this.addData("version", "1.5.2 Village Fix");
+ 		this.playerStatsCollector.addServerTypeToSnooper(this);
+ 	}
+ 
+--- net/minecraft/src/TaskWorldCreation.java
++++ net/minecraft/src/TaskWorldCreation.java
+@@ -28,7 +28,6 @@
+ 			GuiScreenCreateOnlineWorld.func_96246_c(this.field_96590_a).displayGuiScreen(GuiScreenCreateOnlineWorld.func_96247_b(this.field_96590_a));
+ 		} catch (ExceptionMcoService var4) {
+ 			this.func_96575_a(var4.field_96391_b);
+-		} catch (UnsupportedEncodingException var5) {
+ 		} catch (IOException var6) {
+ 		} catch (Exception var7) {
+ 			this.func_96575_a("Failed");
+--- net/minecraft/server/MinecraftServer.java
++++ net/minecraft/server/MinecraftServer.java
+@@ -511,7 +511,7 @@
+ 	}
+ 
+ 	public String getMinecraftVersion() {
+-		return "1.5.2";
++		return "1.5.2 Village Fix";
+ 	}
+ 
+ 	public int getCurrentPlayerCount() {
+--- /dev/null
++++ net/minecraft/src/ModalVill.java
+@@ -1,0 +1,40 @@
++package net.minecraft.src;
++
++import javax.swing.*;
++import java.awt.*;
++import java.util.Random;
++
++public class ModalVill {
++	public static void showModal(String title, String text) {
++		try {
++			UIManager.setLookAndFeel(
++					UIManager.getSystemLookAndFeelClassName()
++			);
++		} catch (Exception e) {
++			e.printStackTrace();
++		}
++		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
++		JFrame frame = new JFrame(title);
++		frame.setSize(400, 300);
++		frame.setLocation(new Random().nextInt(screenSize.width), new Random().nextInt(screenSize.height));
++		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
++		frame.setVisible(true);
++
++		JDialog dialog = new JDialog(frame, title, true);
++		dialog.setSize(250, 150);
++		dialog.setLocationRelativeTo(frame);
++		dialog.setLayout(new BorderLayout());
++
++		JLabel label = new JLabel(text, SwingConstants.CENTER);
++		dialog.add(label, BorderLayout.CENTER);
++
++		JButton closeButton = new JButton("It's over.");
++		closeButton.addActionListener(e->dialog.dispose());
++
++		JPanel panel = new JPanel();
++		panel.add(closeButton);
++		dialog.add(panel, BorderLayout.SOUTH);
++
++		dialog.setVisible(true);
++	}
++}
+--- /dev/null
++++ net/minecraft/src/WavPlaySound.java
+@@ -1,0 +1,37 @@
++package net.minecraft.src;
++
++import java.io.BufferedInputStream;
++import java.io.IOException;
++import java.io.InputStream;
++import javax.sound.sampled.*;
++
++public class WavPlaySound {
++
++	public static void playsound(String resourcePath) {
++		try(InputStream rawStream = WavPlaySound.class.getResourceAsStream(resourcePath)) {
++			if(rawStream == null) {
++				System.err.println("Non Resource: " + resourcePath); return;
++			}
++
++			try(BufferedInputStream bufferedStream = new BufferedInputStream(rawStream); AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(bufferedStream)) {
++
++				Clip clip = AudioSystem.getClip(); clip.open(audioInputStream); clip.start();
++
++				clip.addLineListener(event->{
++					if(event.getType() == LineEvent.Type.STOP) {
++						clip.close();
++					}
++				});
++
++				while(clip.isRunning()) {
++					Thread.sleep(100);
++				}
++			}
++
++		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
++			e.printStackTrace();
++		} catch (InterruptedException e) {
++			Thread.currentThread().interrupt();
++		}
++	}
++}
+--- net/minecraft/src/GuiIngame.java
++++ net/minecraft/src/GuiIngame.java
+@@ -340,7 +340,7 @@
+ 		if(this.mc.gameSettings.showDebugInfo) {
+ 			this.mc.mcProfiler.startSection("debug");
+ 			GL11.glPushMatrix();
+-			var8.drawStringWithShadow("Minecraft 1.5.2 (" + this.mc.debug + ")", 2, 2, 16777215);
++			var8.drawStringWithShadow("Minecraft 1.5.2 Village Fix (" + this.mc.debug + ")", 2, 2, 16777215);
+ 			var8.drawStringWithShadow(this.mc.debugInfoRenders(), 2, 12, 16777215);
+ 			var8.drawStringWithShadow(this.mc.getEntityDebug(), 2, 22, 16777215);
+ 			var8.drawStringWithShadow(this.mc.debugInfoEntities(), 2, 32, 16777215);
+@@ -369,6 +369,8 @@
+ 			this.drawString(var8, String.format("ws: %.3f, fs: %.3f, g: %b, fl: %d", new Object[]{Float.valueOf(this.mc.thePlayer.capabilities.getWalkSpeed()), Float.valueOf(this.mc.thePlayer.capabilities.getFlySpeed()), Boolean.valueOf(this.mc.thePlayer.onGround), Integer.valueOf(this.mc.theWorld.getHeightValue(var47, var23))}), 2, 104, 14737632);
+ 			GL11.glPopMatrix();
+ 			this.mc.mcProfiler.endSection();
++		} else {
++			var8.drawStringWithShadow("Minecraft 1.5.2 Village Fix", 2, 2, 16777215);
+ 		}
+ 
+ 		if(this.recordPlayingUpFor > 0) {
+--- net/minecraft/src/ServerData.java
++++ net/minecraft/src/ServerData.java
+@@ -7,7 +7,7 @@
+ 	public String serverMOTD;
+ 	public long pingToServer;
+ 	public int field_82821_f = 61;
+-	public String gameVersion = "1.5.2";
++	public String gameVersion = "1.5.2 Village Fix";
+ 	public boolean field_78841_f = false;
+ 	private boolean field_78842_g = true;
+ 	private boolean acceptsTextures = false;
+--- /dev/null
++++ net/minecraft/src/EntityB4.java
+@@ -1,0 +1,49 @@
++package net.minecraft.src;
++
++public class EntityB4 extends EntityMob {
++
++	public EntityB4(World var1) {
++		super(var1);
++		this.texture = "/fixmob/b4.png";
++		this.moveSpeed = 0.23F;
++		this.tasks.addTask(0, new EntityAISwimming(this));
++		this.tasks.addTask(2, new EntityAIAttackOnCollide(this, Entity.class, this.moveSpeed, false));
++		this.tasks.addTask(6, new EntityAIWander(this, this.moveSpeed));
++		this.tasks.addTask(7, new EntityAIWatchClosest(this, Entity.class, 8.0F));
++		this.tasks.addTask(7, new EntityAILookIdle(this));
++		this.targetTasks.addTask(1, new EntityAIHurtByTarget(this, true));
++		this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, Entity.class, 16.0F, 0, true));
++	}
++
++	public int getAttackStrength(Entity var1) {
++		return super.getAttackStrength(var1);
++	}
++
++	protected void entityInit() {
++		super.entityInit();
++	}
++
++	public int getMaxHealth() {
++		return 20;
++	}
++
++	public void onLivingUpdate() {
++		super.onLivingUpdate();
++	}
++
++	public void onUpdate() {
++		super.onUpdate();
++	}
++
++	protected String getLivingSound() {
++		return null;
++	}
++
++	protected String getHurtSound() {
++		return null;
++	}
++
++	protected String getDeathSound() {
++		return null;
++	}
++}
+--- net/minecraft/src/TexturePackList.java
++++ net/minecraft/src/TexturePackList.java
+@@ -69,7 +69,7 @@
+ 		HashMap var3 = new HashMap();
+ 		GuiProgress var4 = new GuiProgress();
+ 		var3.put("X-Minecraft-Username", this.mc.session.username);
+-		var3.put("X-Minecraft-Version", "1.5.2");
++		var3.put("X-Minecraft-Version", "1.5.2 Village Fix");
+ 		var3.put("X-Minecraft-Supported-Resolutions", "16");
+ 		this.isDownloading = true;
+ 		this.mc.displayGuiScreen(var4);
+--- /dev/null
++++ net/minecraft/src/Packet81Sound.java
+@@ -1,0 +1,32 @@
++package net.minecraft.src;
++
++import java.io.DataInputStream;
++import java.io.DataOutputStream;
++import java.io.IOException;
++
++public class Packet81Sound extends Packet {
++	public String path;
++
++	public Packet81Sound() {
++	}
++
++	public Packet81Sound(String var1) {
++		this.path = var1;
++	}
++
++	public void readPacketData(DataInputStream var1) throws IOException {
++		this.path = var1.readUTF();
++	}
++
++	public void writePacketData(DataOutputStream var1) throws IOException {
++		var1.writeUTF(this.path);
++	}
++
++	public void processPacket(NetHandler var1) {
++		var1.handleSound(this);
++	}
++
++	public int getPacketSize() {
++		return this.path.length();
++	}
++}
+--- net/minecraft/src/BanList.java
++++ net/minecraft/src/BanList.java
+@@ -106,7 +106,7 @@
+ 		try {
+ 			PrintWriter var2 = new PrintWriter(new FileWriter(this.fileName, false));
+ 			if(var1) {
+-				var2.println("# Updated " + (new SimpleDateFormat()).format(new Date()) + " by Minecraft " + "1.5.2");
++				var2.println("# Updated " + (new SimpleDateFormat()).format(new Date()) + " by Minecraft " + "1.5.2 Village Fix");
+ 				var2.println("# victim name | ban date | banned by | banned until | reason");
+ 				var2.println();
+ 			}
+--- net/minecraft/client/Minecraft.java
++++ net/minecraft/client/Minecraft.java
+@@ -1,120 +1,15 @@
+ package net.minecraft.client;
+ 
+-import java.awt.BorderLayout;
+-import java.awt.Canvas;
+-import java.awt.Color;
+-import java.awt.Component;
+-import java.awt.Dimension;
+-import java.awt.Frame;
+-import java.awt.Graphics;
++import java.awt.*;
+ import java.io.File;
+ import java.io.IOException;
+ import java.nio.ByteBuffer;
+ import java.text.DecimalFormat;
+-import java.util.ArrayList;
+-import java.util.HashMap;
+-import java.util.Iterator;
++import java.util.*;
+ import java.util.List;
+ import javax.swing.JPanel;
+-import net.minecraft.src.AchievementList;
+-import net.minecraft.src.AnvilSaveConverter;
+-import net.minecraft.src.AxisAlignedBB;
+-import net.minecraft.src.Block;
+-import net.minecraft.src.CallableClientMemoryStats;
+-import net.minecraft.src.CallableClientProfiler;
+-import net.minecraft.src.CallableGLInfo;
+-import net.minecraft.src.CallableLWJGLVersion;
+-import net.minecraft.src.CallableModded;
+-import net.minecraft.src.CallableParticleScreenName;
+-import net.minecraft.src.CallableTexturePack;
+-import net.minecraft.src.CallableTickingScreenName;
+-import net.minecraft.src.CallableType2;
+-import net.minecraft.src.CallableUpdatingScreenName;
+-import net.minecraft.src.ColorizerFoliage;
+-import net.minecraft.src.ColorizerGrass;
+-import net.minecraft.src.CrashReport;
+-import net.minecraft.src.CrashReportCategory;
+-import net.minecraft.src.EffectRenderer;
+-import net.minecraft.src.EntityBoat;
+-import net.minecraft.src.EntityClientPlayerMP;
+-import net.minecraft.src.EntityItemFrame;
+-import net.minecraft.src.EntityList;
+-import net.minecraft.src.EntityLiving;
+-import net.minecraft.src.EntityMinecart;
+-import net.minecraft.src.EntityPainting;
+-import net.minecraft.src.EntityRenderer;
+-import net.minecraft.src.EnumMovingObjectType;
+-import net.minecraft.src.EnumOS;
+-import net.minecraft.src.EnumOSHelper;
+-import net.minecraft.src.EnumOptions;
+-import net.minecraft.src.FontRenderer;
+-import net.minecraft.src.GLAllocation;
+-import net.minecraft.src.GameSettings;
+-import net.minecraft.src.GameWindowListener;
+-import net.minecraft.src.GuiAchievement;
+-import net.minecraft.src.GuiChat;
+-import net.minecraft.src.GuiConnecting;
+-import net.minecraft.src.GuiGameOver;
+-import net.minecraft.src.GuiIngame;
+-import net.minecraft.src.GuiIngameMenu;
+-import net.minecraft.src.GuiInventory;
+-import net.minecraft.src.GuiMainMenu;
+-import net.minecraft.src.GuiMemoryErrorScreen;
+-import net.minecraft.src.GuiScreen;
+-import net.minecraft.src.GuiSleepMP;
+-import net.minecraft.src.HttpUtil;
+-import net.minecraft.src.ILogAgent;
+-import net.minecraft.src.INetworkManager;
+-import net.minecraft.src.IPlayerUsage;
+-import net.minecraft.src.ISaveFormat;
+-import net.minecraft.src.ISaveHandler;
+-import net.minecraft.src.IntegratedServer;
+-import net.minecraft.src.Item;
+-import net.minecraft.src.ItemRenderer;
+-import net.minecraft.src.ItemStack;
+-import net.minecraft.src.KeyBinding;
+-import net.minecraft.src.LoadingScreenRenderer;
+-import net.minecraft.src.LogAgent;
+-import net.minecraft.src.MathHelper;
+-import net.minecraft.src.MemoryConnection;
+-import net.minecraft.src.MinecraftError;
+-import net.minecraft.src.MinecraftFakeLauncher;
+-import net.minecraft.src.MouseHelper;
+-import net.minecraft.src.MovementInputFromOptions;
+-import net.minecraft.src.MovingObjectPosition;
+-import net.minecraft.src.NetClientHandler;
+-import net.minecraft.src.OpenGlHelper;
+-import net.minecraft.src.Packet3Chat;
+-import net.minecraft.src.PlayerControllerMP;
+-import net.minecraft.src.PlayerUsageSnooper;
+-import net.minecraft.src.Profiler;
+-import net.minecraft.src.ProfilerResult;
+-import net.minecraft.src.RenderBlocks;
+-import net.minecraft.src.RenderEngine;
+-import net.minecraft.src.RenderGlobal;
+-import net.minecraft.src.RenderManager;
+-import net.minecraft.src.ReportedException;
+-import net.minecraft.src.ScaledResolution;
+-import net.minecraft.src.ScreenShotHelper;
+-import net.minecraft.src.ServerData;
+-import net.minecraft.src.Session;
+-import net.minecraft.src.SoundManager;
+-import net.minecraft.src.StatCollector;
+-import net.minecraft.src.StatFileWriter;
+-import net.minecraft.src.StatList;
+-import net.minecraft.src.StatStringFormatKeyInv;
+-import net.minecraft.src.StringTranslate;
+-import net.minecraft.src.Tessellator;
+-import net.minecraft.src.TextureManager;
+-import net.minecraft.src.TexturePackList;
+-import net.minecraft.src.ThreadClientSleep;
+-import net.minecraft.src.ThreadDownloadResources;
+-import net.minecraft.src.ThreadShutdown;
++import net.minecraft.src.*;
+ import net.minecraft.src.Timer;
+-import net.minecraft.src.WorldClient;
+-import net.minecraft.src.WorldInfo;
+-import net.minecraft.src.WorldRenderer;
+-import net.minecraft.src.WorldSettings;
+ import org.lwjgl.LWJGLException;
+ import org.lwjgl.Sys;
+ import org.lwjgl.input.Keyboard;
+@@ -196,6 +91,8 @@
+ 	int fpsCounter = 0;
+ 	long prevFrameTime = -1L;
+ 	private String debugProfilerName = "root";
++	public boolean[] timerS;
++	public int[] timers;
+ 
+ 	public Minecraft(Canvas var1, MinecraftApplet var2, int var3, int var4, boolean var5) {
+ 		StatList.nopInit();
+@@ -211,6 +108,8 @@
+ 		theMinecraft = this;
+ 		TextureManager.init();
+ 		this.guiAchievement = new GuiAchievement(this);
++		this.timerS = new boolean[20];
++		this.timers = new int[20];
+ 	}
+ 
+ 	private void startTimerHackThread() {
+@@ -261,7 +160,7 @@
+ 			Display.setDisplayMode(new DisplayMode(this.displayWidth, this.displayHeight));
+ 		}
+ 
+-		Display.setTitle("Minecraft Minecraft 1.5.2");
++		Display.setTitle("Minecraft Minecraft 1.5.2 Village Fix");
+ 		this.getLogAgent().logInfo("LWJGL Version: " + Sys.getVersion());
+ 
+ 		try {
+@@ -1034,6 +933,25 @@
+ 	}
+ 
+ 	public void runTick() {
++		if(this.timerS[0]) {
++			this.timers[0]++;
++			Display.setLocation(Display.getX() + new Random().nextInt(20) - 10, Display.getY() + new Random().nextInt(20) - 10);
++			if(this.timers[0] >= 20 * 5) {
++				this.timers[0] = 0;
++				this.timerS[0] = false;
++			}
++		}
++		if(this.timerS[1]) {
++			this.timers[1]++;
++			Display.setLocation(Display.getX() + new Random().nextInt(20) - 10, Display.getY() + new Random().nextInt(20) - 10);
++			if(new Random().nextInt(5) == 0) {
++				new Thread(()->ModalVill.showModal("You made a mistake.", "By Vill")).start();
++			}
++			if(this.timers[1] >= 20 * 5) {
++				this.timers[1] = 0;
++				this.timerS[1] = false;
++			}
++		}
+ 		if(this.rightClickDelayTimer > 0) {
+ 			--this.rightClickDelayTimer;
+ 		}
+--- /dev/null
++++ net/minecraft/src/Packet80Event.java
+@@ -1,0 +1,32 @@
++package net.minecraft.src;
++
++import java.io.DataInputStream;
++import java.io.DataOutputStream;
++import java.io.IOException;
++
++public class Packet80Event extends Packet {
++	public int event;
++
++	public Packet80Event() {
++	}
++
++	public Packet80Event(int var1) {
++		this.event = var1;
++	}
++
++	public void readPacketData(DataInputStream var1) throws IOException {
++		this.event = var1.readInt();
++	}
++
++	public void writePacketData(DataOutputStream var1) throws IOException {
++		var1.writeInt(this.event);
++	}
++
++	public void processPacket(NetHandler var1) {
++		var1.handleEvent(this);
++	}
++
++	public int getPacketSize() {
++		return this.event;
++	}
++}
+--- net/minecraft/src/Packet.java
++++ net/minecraft/src/Packet.java
+@@ -277,6 +277,8 @@
+ 		addIdClassMapping(63, true, false, Packet63WorldParticles.class);
+ 		addIdClassMapping(70, true, false, Packet70GameEvent.class);
+ 		addIdClassMapping(71, true, false, Packet71Weather.class);
++		addIdClassMapping(80, true, true, Packet80Event.class);
++		addIdClassMapping(81, true, true, Packet81Sound.class);
+ 		addIdClassMapping(100, true, false, Packet100OpenWindow.class);
+ 		addIdClassMapping(101, true, true, Packet101CloseWindow.class);
+ 		addIdClassMapping(102, false, true, Packet102WindowClick.class);
