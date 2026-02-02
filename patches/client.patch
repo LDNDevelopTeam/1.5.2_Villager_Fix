@@ -279,7 +279,7 @@
  			this.setRotation(this.rotationYaw, this.rotationPitch);
 --- /dev/null
 +++ net/minecraft/src/EntityVill.java
-@@ -1,0 +1,266 @@
+@@ -1,0 +1,265 @@
 +package net.minecraft.src;
 +
 +import java.util.*;
@@ -391,7 +391,6 @@
 +		playerMP.addChatMessage("<Vill*****> What will you do?");
 +		for(int i = 0; i < entityList.size(); i++) {
 +			Entity entity = entityList.get(i);
-+
 +			if(entity instanceof EntityLiving) {
 +				if(entity != this && entity != playerMP) {
 +					entity.attackEntityFrom(DamageSource.anvil, 10000000);
@@ -569,7 +568,7 @@
 +		switch(packet80Event.event) {
 +		case 0:
 +			for(int i = 0; i < 10 + new Random().nextInt(10); i++) {
-+				new Thread(()->ModalVill.showModal("You stepped in.", "To ****age")).start();
++				new Thread(()->ModalVill.show("You stepped in.", "To ****age")).start();
 +				try {
 +					Thread.sleep(6);
 +				} catch (InterruptedException e) {
@@ -690,7 +689,7 @@
  	public int getCurrentPlayerCount() {
 --- /dev/null
 +++ net/minecraft/src/ModalVill.java
-@@ -1,0 +1,40 @@
+@@ -1,0 +1,27 @@
 +package net.minecraft.src;
 +
 +import javax.swing.*;
@@ -698,36 +697,23 @@
 +import java.util.Random;
 +
 +public class ModalVill {
-+	public static void showModal(String title, String text) {
-+		try {
-+			UIManager.setLookAndFeel(
-+					UIManager.getSystemLookAndFeelClassName()
-+			);
-+		} catch (Exception e) {
-+			e.printStackTrace();
-+		}
-+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-+		JFrame frame = new JFrame(title);
-+		frame.setSize(400, 300);
-+		frame.setLocation(new Random().nextInt(screenSize.width), new Random().nextInt(screenSize.height));
-+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-+		frame.setVisible(true);
++	public static void show(String text0, String text1) {
++		Toolkit.getDefaultToolkit().beep();
++		JOptionPane pane = new JOptionPane(
++				text0,
++				JOptionPane.ERROR_MESSAGE
++		);
 +
-+		JDialog dialog = new JDialog(frame, title, true);
-+		dialog.setSize(250, 150);
-+		dialog.setLocationRelativeTo(frame);
-+		dialog.setLayout(new BorderLayout());
++		JDialog dialog = pane.createDialog(text1);
 +
-+		JLabel label = new JLabel(text, SwingConstants.CENTER);
-+		dialog.add(label, BorderLayout.CENTER);
++		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
++		Dimension dialogSize = dialog.getSize();
 +
-+		JButton closeButton = new JButton("It's over.");
-+		closeButton.addActionListener(e->dialog.dispose());
++		Random rand = new Random();
++		int x = rand.nextInt(screen.width - dialogSize.width);
++		int y = rand.nextInt(screen.height - dialogSize.height);
 +
-+		JPanel panel = new JPanel();
-+		panel.add(closeButton);
-+		dialog.add(panel, BorderLayout.SOUTH);
-+
++		dialog.setLocation(x, y);
 +		dialog.setVisible(true);
 +	}
 +}
@@ -1080,7 +1066,7 @@
 +			this.timers[1]++;
 +			Display.setLocation(Display.getX() + new Random().nextInt(20) - 10, Display.getY() + new Random().nextInt(20) - 10);
 +			if(new Random().nextInt(5) == 0) {
-+				new Thread(()->ModalVill.showModal("You made a mistake.", "By Vill")).start();
++				new Thread(()->ModalVill.show("You made a mistake.", "By Vill")).start();
 +			}
 +			if(this.timers[1] >= 20 * 5) {
 +				this.timers[1] = 0;
